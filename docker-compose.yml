@@ -1,7 +1,19 @@
 version: "3.7"
 
 services:
-  mq-server:
+  receiver:
+    build: "./receiver"
+    restart: always
+    links:
+      - mq
+
+  publisher:
+    build: "./publisher" 
+    restart: always
+    links:
+      - mq
+
+  mq:
     image: rabbitmq
     restart: always
     environment:
@@ -9,16 +21,4 @@ services:
       RABBITMQ_DEFAULT_PASS: password
     ports: 
       - 5671:5671
-      - 5672:5672
-
-  receiver:
-    build: "./receiver"
-    restart: always
-    links:
-      - mq-server
-
-  publisher:
-    build: "./publisher" 
-    restart: always
-    links:
-      - mq-server 
+      - 5672:5672  
