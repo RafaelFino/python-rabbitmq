@@ -24,24 +24,27 @@ conn = None
 
 print(" [*] Starting...")
 
+qty = 0
+
 while conn == None:
     conn = connect()
     sleep(1)
 
-for loop in range(100):
+for loop in range(1000):
     print(" [*] Starting loop {0}".format(loop))  
 
     print(" [*] Getting channel...")
     channel = conn.channel()
     channel.queue_declare(queue='default-queue')
 
-    for i in range(20):
+    for i in range(200):
         print(" [>] Sending msg {0}".format(i))
         channel.basic_publish(exchange='', 
             routing_key='default-queue', 
-            body='[{0}:{1}] my msg in {2}'.format(loop, i, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            body='[Qty={0}] [{1}:{2}] my msg in {3}'.format(qty, loop, i, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
-        sleep(1)
+        #sleep(1)
+        qty = qty + 1
 
     print(" [*] Clossing channel...")
     channel.close()
