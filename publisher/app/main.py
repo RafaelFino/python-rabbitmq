@@ -7,7 +7,7 @@ def connect():
     print(" [*] Trying connect...")
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='localhost', 
+            host='mq', 
             credentials=pika.PlainCredentials('user', 'password')))
 
         print(" [#] Connected! ")
