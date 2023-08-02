@@ -9,7 +9,7 @@ class MQConnection:
     def Connect(self, user, passwd):
         logging.debug("Connecting to MQ...") 
         self.connected = False
-        self.connection = None
+        self.connection = None        
         ret = None
 
         try:            
@@ -17,7 +17,7 @@ class MQConnection:
                 host='mq', 
                 credentials=pika.PlainCredentials(user, passwd)))
             self.connected = True
-            
+           
             ret = "Connection to MQ established"
             logging.info(ret)
             
@@ -42,6 +42,7 @@ class MQConnection:
         try:            
             self.connection.close()
             self.connection = None
+            self.channel = None 
             self.connected = False
 
             ret = "Connection to MQ closed"
@@ -62,8 +63,8 @@ class MQConnection:
             raise Exception(ret)
         
         try:                        
-            channel = self.connection.channel()
-            channel.queue_declare(queue=name, durable=True)
+            self.channel = self.connection.channel()
+            self.channel.queue_declare(exchange='', queue=name)
 
             ret = "Queue {0} declared".format(name)
         except Exception as Err:
@@ -81,20 +82,19 @@ class MQConnection:
             ret = "Not connected"
             raise Exception(ret)
         
-        try:
-            channel = self.connection.channel()
-            
-            channel.basic_publish(exchange='', 
-                routing_key=queue, 
-                body=msg)
-            
-            channel.close()
-            
-            ret = "message sent to {}".format(queue)
+        try:                        
+            if self.channel == None:
+                self.DeclareQueue(queue)
+
+            self.channel.basic_publish(exchange='', 
+                                  routing_key=queue, 
+                                  body=str(msg))
+                       
+            ret = "[{0}] message sent -> {1} ".format(queue, msg)
 
         except Exception as Err:
             ret = "Exception: {}".format(Err)
-            raise Exception(ret)
+            raise Exception(ret)            
         
         return ret
     

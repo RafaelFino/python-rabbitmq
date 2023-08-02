@@ -1,49 +1,60 @@
 import pika, sys, os
 from time import sleep
+import logging
+import sys
+
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+root.addHandler(handler)
 
 def connect():
     connection = None    
-    print(" [*] Trying connect...")
+    logging.info(" [*] Trying connect...")
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='mq', 
+            host='localhost', 
             credentials=pika.PlainCredentials('user', 'password')))
 
-        print(" [#] Connected! ")
+        logging.info(" [#] Connected! ")
         connected = True
     except pika.exceptions.AMQPConnectionError as Err:
-        print(" [X] Error: {0} ".format(Err))
+        logging.info(" [X] Error: {0} ".format(Err))
         return None
     except:
-        print(" [X] Error!")
+        logging.info(" [X] Error!")
 
     return connection
 
 conn = None
 
-print(" [*] Starting...")
+logging.info(" [*] Starting...")
 
 while conn == None:
     conn = connect()
     sleep(1)
 
-print(" [*] Getting channel...")
+logging.info(" [*] Getting channel...")
 channel = conn.channel()
-channel.queue_declare(queue='default-queue')
+channel.queue_declare(queue='filona-da-hora')
 
 def callback(ch, method, properties, body):
-    print(" [<] Received %r" % body)
+    logging.info(" [<] Received -> {0}".format(body.decode()))
 
-print(" [*] Setting receiver...")
-channel.basic_consume(queue='default-queue', on_message_callback=callback, auto_ack=True)
+logging.info(" [*] Setting receiver...")
+channel.basic_consume(queue='filona-da-hora', on_message_callback=callback, auto_ack=True)    
 
-print(' [*] Waiting for messages...')
+logging.info(' [*] Waiting for messages...')
 channel.start_consuming()
 
-print(" [*] Clossing channel...")
+logging.info(" [*] Clossing channel...")
 channel.close()
 
-print(" [*] Closing connection...")
+logging.info(" [*] Closing connection...")
 conn.close();
 
-print(" [X] Stop!")
+logging.info(" [X] Stop!")

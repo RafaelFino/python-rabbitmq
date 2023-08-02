@@ -1,11 +1,13 @@
 version: "3.7"
 
 services:
-  receiver:
-    build: "./receiver"
-    restart: always
-    links:
-      - mq
+#  receiver:
+#    build: "./receiver"
+#    restart: always
+#    links:
+#      - mq
+#    depends_on:
+#      - mq
 
   publisher:
     build: "./publisher" 
@@ -14,9 +16,12 @@ services:
       - mq
     ports:
       - 5000:5000
+    depends_on:
+      - mq
+#      - receiver
 
   mq:
-    image: rabbitmq
+    image: rabbitmq:3-management
     restart: always
     environment:
       RABBITMQ_DEFAULT_USER: user
@@ -24,3 +29,4 @@ services:
     ports: 
       - 5671:5671
       - 5672:5672  
+      - 15672:15672

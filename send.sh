@@ -1,2 +1,11 @@
 #!/bin/bash
- curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "default-queue", "message": "teste de envio de mensagem" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 1" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 2" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 3" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 4" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 5" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 6" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 7" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 8" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 9" }' -H 'Content-Type: application/json'
+ curl -X POST -i http://localhost:5000/publish -d '{ "queueName": "filona-da-hora", "message": "teste de envio de mensagem 10" }' -H 'Content-Type: application/json'
