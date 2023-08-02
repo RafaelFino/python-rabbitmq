@@ -1,7 +1,7 @@
 import pika
 import logging
 
-class MQ:
+class MQConnection:
     def __init__(self) -> None:
         self.connection = None
         self.connected = False

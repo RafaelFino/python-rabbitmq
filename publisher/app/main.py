@@ -1,14 +1,21 @@
 
 import datetime
-from service.connection import MQConnection
 from datetime import datetime as dt
-from flask import Flask, request
+from flask import Flask, request, make_response
 from http import HTTPStatus
+from infra.mqconn import MQConnection
 
-app = Flask(__name__)
 conn = MQConnection()
+app = Flask(__name__)
 
-def CreateStatusResponse():
+app.run()
+
+def GetHeaders():
+    return {
+        'Content-Type': 'application/json'        
+    }
+
+def GetResponse():
     return {
         'connected': conn.connected,
         'timestamp': dt.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -30,7 +37,7 @@ def pong():
 @app.route('/status', methods=['GET'])
 def status():
     app.logger.info("Checking MQ status...")
-    return CreateStatusResponse(), HTTPStatus.OK
+    return make_response(GetResponse(), HTTPStatus.OK, GetHeaders())
 
 @app.route('/connect', methods=['POST'])
 def connect():
@@ -39,24 +46,22 @@ def connect():
     req = request.get_json()
 
     if CheckParams(['user', 'passwd'], req) != True:
-        return CreateStatusResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
+        return make_response(GetResponse(), HTTPStatus.UNPROCESSABLE_ENTITY, GetHeaders())
 
     if conn.Connect(req['user'], req['passwd']) != True:
-        return CreateStatusResponse(), HTTPStatus.BAD_GATEWAY
+        return make_response(GetResponse(), HTTPStatus.BAD_GATEWAY, GetHeaders())
 
-    return CreateStatusResponse(), HTTPStatus.OK
+    return make_response(GetResponse(), HTTPStatus.OK, GetHeaders())
 
 
 @app.route('/close', methods=['POST'])
 def close():
     app.logger.info("Closing connection to MQ...")
 
-    ret = HTTPStatus.OK
-
     if conn.Disconnect() != True:
-        ret = HTTPStatus.BAD_GATEWAY
+        return make_response(GetResponse(), HTTPStatus.BAD_GATEWAY, GetHeaders())
 
-    return CreateStatusResponse(), ret
+    return make_response(GetResponse(), HTTPStatus.OK, GetHeaders())
 
 @app.route('/declare', methods=['POST'])
 def declare():
@@ -65,12 +70,12 @@ def declare():
     request = request.get_json()
 
     if CheckParams(['queueName'], request) != True:
-        return CreateStatusResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
+        return make_response(GetResponse(), HTTPStatus.UNPROCESSABLE_ENTITY, GetHeaders())
 
     if conn.DeclareQueue(request['queueName']) != True:
-        return CreateStatusResponse(), HTTPStatus.BAD_GATEWAY
+        return make_response(GetResponse(), HTTPStatus.BAD_GATEWAY, GetHeaders())
 
-    return CreateStatusResponse(), HTTPStatus.OK
+    return make_response(GetResponse(), HTTPStatus.OK, GetHeaders())
 
 @app.route('/publish', methods=['POST'])
 def publish():
@@ -79,12 +84,12 @@ def publish():
     request = request.get_json()
 
     if CheckParams(['queueName', 'message'], request) != True:
-        return CreateStatusResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
+        return GetResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
     
     if conn.connected != True:
-        return CreateStatusResponse(), HTTPStatus.BAD_GATEWAY
+        return make_response(GetResponse(), HTTPStatus.BAD_GATEWAY, GetHeaders())
 
     if conn.Publish(request['queueName'], request['message']) != True:
-        return CreateStatusResponse(), HTTPStatus.INTERNAL_SERVER_ERROR
+        return make_response(GetResponse(), HTTPStatus.INTERNAL_SERVER_ERROR, GetHeaders())
 
-    return CreateStatusResponse(), HTTPStatus.OK    
+    return make_response(GetResponse(), HTTPStatus.OK, GetHeaders())
