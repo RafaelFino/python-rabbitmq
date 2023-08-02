@@ -2,9 +2,10 @@ FROM python:3
 
 WORKDIR /app
 
+COPY run.sh .
+COPY src ./src
+
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app/main.py .
-
-CMD [ "flask", "run", "--host=0.0.0.0 ]
+CMD [ "/app/run.sh" ]
