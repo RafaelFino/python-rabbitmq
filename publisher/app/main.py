@@ -1,55 +1,90 @@
-import pika
+
 import datetime
-from time import sleep
+from service.connection import MQConnection
+from datetime import datetime as dt
+from flask import Flask, request
+from http import HTTPStatus
 
-def connect():    
-    connection = None
-    print(" [*] Trying connect...")
-    try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='mq', 
-            credentials=pika.PlainCredentials('user', 'password')))
+app = Flask(__name__)
+conn = MQConnection()
 
-        print(" [#] Connected! ")
-        connected = True
-    except pika.exceptions.AMQPConnectionError as Err:
-        print(" [X] Error: {0} ".format(Err))
-        return None
-    except:
-        print(" [X] Error!")        
+def CreateStatusResponse():
+    return {
+        'connected': conn.connected,
+        'timestamp': dt.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
-    return connection
+def CheckParams(targets, params) -> bool:
+    for target in targets:
+        if target not in params:
+            return False
+        
+    return True
 
-conn = None
+@app.route('/ping', methods=['GET'])
+def pong():
+    return {
+        'timestamp': dt.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
 
-print(" [*] Starting...")
+@app.route('/status', methods=['GET'])
+def status():
+    app.logger.info("Checking MQ status...")
+    return CreateStatusResponse(), HTTPStatus.OK
 
-qty = 0
+@app.route('/connect', methods=['POST'])
+def connect():
+    app.logger.info("Connecting to MQ...")
 
-while conn == None:
-    conn = connect()
-    sleep(1)
+    req = request.get_json()
 
-for loop in range(1000):
-    print(" [*] Starting loop {0}".format(loop))  
+    if CheckParams(['user', 'passwd'], req) != True:
+        return CreateStatusResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
 
-    print(" [*] Getting channel...")
-    channel = conn.channel()
-    channel.queue_declare(queue='default-queue')
+    if conn.Connect(req['user'], req['passwd']) != True:
+        return CreateStatusResponse(), HTTPStatus.BAD_GATEWAY
 
-    for i in range(200):
-        print(" [>] Sending msg {0}".format(i))
-        channel.basic_publish(exchange='', 
-            routing_key='default-queue', 
-            body='[Qty={0}] [{1}:{2}] my msg in {3}'.format(qty, loop, i, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    return CreateStatusResponse(), HTTPStatus.OK
 
-        #sleep(1)
-        qty = qty + 1
 
-    print(" [*] Clossing channel...")
-    channel.close()
+@app.route('/close', methods=['POST'])
+def close():
+    app.logger.info("Closing connection to MQ...")
 
-print(" [*] Closing connection...")
-conn.close()
+    ret = HTTPStatus.OK
 
-print(" [X] Stop")
+    if conn.Disconnect() != True:
+        ret = HTTPStatus.BAD_GATEWAY
+
+    return CreateStatusResponse(), ret
+
+@app.route('/declare', methods=['POST'])
+def declare():
+    app.logger.info("Declaring queue...")
+
+    request = request.get_json()
+
+    if CheckParams(['queueName'], request) != True:
+        return CreateStatusResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
+
+    if conn.DeclareQueue(request['queueName']) != True:
+        return CreateStatusResponse(), HTTPStatus.BAD_GATEWAY
+
+    return CreateStatusResponse(), HTTPStatus.OK
+
+@app.route('/publish', methods=['POST'])
+def publish():
+    app.logger.info("Publishing message...")
+
+    request = request.get_json()
+
+    if CheckParams(['queueName', 'message'], request) != True:
+        return CreateStatusResponse(), HTTPStatus.UNPROCESSABLE_ENTITY
+    
+    if conn.connected != True:
+        return CreateStatusResponse(), HTTPStatus.BAD_GATEWAY
+
+    if conn.Publish(request['queueName'], request['message']) != True:
+        return CreateStatusResponse(), HTTPStatus.INTERNAL_SERVER_ERROR
+
+    return CreateStatusResponse(), HTTPStatus.OK    
