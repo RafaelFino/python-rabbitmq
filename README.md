@@ -1,2 +1,2 @@
 # # python-rabbitmq
-A simples python pub/sub with rabbitMQ
+A simple python pub/sub with rabbitMQ
