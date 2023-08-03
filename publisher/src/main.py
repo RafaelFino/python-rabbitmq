@@ -114,4 +114,4 @@ def publish():
     except Exception as Err:
         return make_response(GetResponse({ 'return-message': str(ret), 'exception': str(Err) }), HTTPStatus.INTERNAL_SERVER_ERROR, GetHeaders())
     
-    return make_response(GetResponse({ 'return-message': str(ret) }), HTTPStatus.OK, GetHeaders())
+    return make_response(GetResponse({ 'return-message': str(ret) }), HTTPStatus.CREATED, GetHeaders())

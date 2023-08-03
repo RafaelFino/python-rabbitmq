@@ -1,14 +1,14 @@
-import pika, sys, os
+import pika, sys
 from time import sleep
 import logging
-import sys
 
 root = logging.getLogger()
-root.setLevel(logging.DEBUG)
+root.setLevel(logging.INFO)
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 handler.setFormatter(formatter)
 root.addHandler(handler)
 
@@ -17,7 +17,7 @@ def connect():
     logging.info(" [*] Trying connect...")
     try:
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='localhost', 
+            host='mq', 
             credentials=pika.PlainCredentials('user', 'password')))
 
         logging.info(" [#] Connected! ")
